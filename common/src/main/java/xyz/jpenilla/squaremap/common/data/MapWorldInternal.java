@@ -21,6 +21,7 @@ import net.minecraft.world.level.storage.LevelData;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.framework.qual.DefaultQualifier;
+import xyz.jpenilla.squaremap.api.Key;
 import xyz.jpenilla.squaremap.api.LayerProvider;
 import xyz.jpenilla.squaremap.api.MapWorld;
 import xyz.jpenilla.squaremap.api.Registry;

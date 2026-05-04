@@ -12,6 +12,7 @@ import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.framework.qual.DefaultQualifier;
+import xyz.jpenilla.squaremap.api.Key;
 import xyz.jpenilla.squaremap.api.Squaremap;
 import xyz.jpenilla.squaremap.api.SquaremapProvider;
 import xyz.jpenilla.squaremap.common.command.Commands;
@@ -24,6 +25,7 @@ import xyz.jpenilla.squaremap.common.config.MarkerConfig;
 import xyz.jpenilla.squaremap.common.httpd.IntegratedServer;
 import xyz.jpenilla.squaremap.common.httpd.JsonCache;
 import xyz.jpenilla.squaremap.common.layer.SpawnIconLayer;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -149,7 +151,7 @@ public final class SquaremapCommon {
                 if (icon.url() != null && !icon.url().isEmpty()) {
                     CompletableFuture.runAsync(() -> {
                         try {
-                            api.iconRegistry().register(key, ImageIO.read(new URL(icon.url())));
+                            api.iconRegistry().register(key, ImageIO.read(URI.create(icon.url()).toURL()));
                         } catch (Exception e) {
                             Logging.logger().warn("Failed to register icon from URL: {}", icon.url(), e);
                         }
