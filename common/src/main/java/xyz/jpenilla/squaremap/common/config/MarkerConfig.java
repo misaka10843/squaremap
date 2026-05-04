@@ -28,6 +28,11 @@ public final class MarkerConfig extends AbstractConfig {
         return instance;
     }
 
+    private void settings() {
+        this.get(new TypeToken<Map<String, IconConfig>>() {}, "icons", Collections.emptyMap());
+        this.get(new TypeToken<Map<String, List<LayerConfig>>>() {}, "worlds", Collections.emptyMap());
+    }
+
     public Map<String, IconConfig> icons() {
         return this.get(new TypeToken<Map<String, IconConfig>>() {}, "icons", Collections.emptyMap());
     }
@@ -59,11 +64,25 @@ public final class MarkerConfig extends AbstractConfig {
     @ConfigSerializable
     public record MarkerEntry(
         String type,
-        List<Double> point,
-        String icon,
-        Integer size,
-        Integer sizeX,
-        Integer sizeZ,
-        String tooltip
+        List<Double> point,      // For Icon, Circle
+        List<List<Double>> points, // For Polyline, Polygon
+        List<Double> point1,     // For Rectangle
+        List<Double> point2,     // For Rectangle
+        Double radius,           // For Circle
+        String icon,             // For Icon
+        Integer size,            // For Icon
+        Integer sizeX,           // For Icon
+        Integer sizeZ,           // For Icon
+        String tooltip,
+        MarkerStyle style
+    ) {}
+
+    @ConfigSerializable
+    public record MarkerStyle(
+        String strokeColor,
+        Double strokeOpacity,
+        Integer strokeWeight,
+        String fillColor,
+        Double fillOpacity
     ) {}
 }

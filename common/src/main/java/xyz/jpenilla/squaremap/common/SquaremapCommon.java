@@ -78,6 +78,7 @@ public final class SquaremapCommon {
         this.start();
         this.setupApi();
         this.commands.registerCommands();
+        Logging.logger().info("Squaremap custom markers initialized.");
     }
 
     private void start() {
@@ -110,6 +111,7 @@ public final class SquaremapCommon {
         this.configManager.reload();
         MarkerConfig.reload(this.directoryProvider);
         this.playerManager.reload();
+        this.registerCustomIcons();
 
         this.start();
 
@@ -136,43 +138,52 @@ public final class SquaremapCommon {
             Logging.logger().warn("Failed to register spawn icon", ex);
         }
 
-        // Register custom icons from markers.yml
-        final MarkerConfig markerConfig = MarkerConfig.instance();
-        if (markerConfig != null) {
-            final Map<String, MarkerConfig.IconConfig> icons = markerConfig.icons();
-            for (final Map.Entry<String, MarkerConfig.IconConfig> entry : icons.entrySet()) {
-                final String name = entry.getKey();
-                final MarkerConfig.IconConfig icon = entry.getValue();
-                final Key key = Key.of(name);
-                if (api.iconRegistry().hasEntry(key)) {
-                    continue;
-                }
-
-                if (icon.url() != null && !icon.url().isEmpty()) {
-                    CompletableFuture.runAsync(() -> {
-                        try {
-                            api.iconRegistry().register(key, ImageIO.read(URI.create(icon.url()).toURL()));
-                        } catch (Exception e) {
-                            Logging.logger().warn("Failed to register icon from URL: {}", icon.url(), e);
-                        }
-                    });
-                } else if (icon.file() != null && !icon.file().isEmpty()) {
-                    final Path path = this.directoryProvider.dataDirectory().resolve(icon.file());
-                    if (Files.exists(path)) {
-                        try {
-                            api.iconRegistry().register(key, ImageIO.read(path.toFile()));
-                        } catch (IOException e) {
-                            Logging.logger().warn("Failed to register icon from file: {}", path, e);
-                        }
-                    } else {
-                        Logging.logger().warn("Icon file not found: {}", path);
-                    }
-                }
-            }
-        }
+        this.registerCustomIcons();
 
         final Method register = ReflectionUtil.needMethod(SquaremapProvider.class, List.of("register"), Squaremap.class);
         ReflectionUtil.invokeOrThrow(register, null, api);
+    }
+
+    private void registerCustomIcons() {
+        final Squaremap api = this.injector.getInstance(Squaremap.class);
+        final MarkerConfig markerConfig = MarkerConfig.instance();
+        if (markerConfig == null) {
+            Logging.logger().warn("MarkerConfig instance is null, skipping icon registration.");
+            return;
+        }
+        final Map<String, MarkerConfig.IconConfig> icons = markerConfig.icons();
+        Logging.logger().info("Registering {} custom icons from markers.yml", icons.size());
+        for (final Map.Entry<String, MarkerConfig.IconConfig> entry : icons.entrySet()) {
+            final String name = entry.getKey();
+            final MarkerConfig.IconConfig icon = entry.getValue();
+            final Key key = Key.of(name);
+            if (api.iconRegistry().hasEntry(key)) {
+                continue;
+            }
+
+            if (icon.url() != null && !icon.url().isEmpty()) {
+                CompletableFuture.runAsync(() -> {
+                    try {
+                        api.iconRegistry().register(key, ImageIO.read(URI.create(icon.url()).toURL()));
+                        Logging.logger().info("Registered custom icon from URL: {}", name);
+                    } catch (Exception e) {
+                        Logging.logger().warn("Failed to register icon from URL: {}", icon.url(), e);
+                    }
+                });
+            } else if (icon.file() != null && !icon.file().isEmpty()) {
+                final Path path = this.directoryProvider.dataDirectory().resolve(icon.file());
+                if (Files.exists(path)) {
+                    try {
+                        api.iconRegistry().register(key, ImageIO.read(path.toFile()));
+                        Logging.logger().info("Registered custom icon from file: {}", name);
+                    } catch (IOException e) {
+                        Logging.logger().warn("Failed to register icon from file: {}", path, e);
+                    }
+                } else {
+                    Logging.logger().warn("Icon file not found: {}", path);
+                }
+            }
+        }
     }
 
     private void shutdownApi() {

@@ -10,9 +10,11 @@ java {
 
 dependencies {
   compileOnly(libs.paperApi)
+  /*
   javadocLinks(libs.paperApi) {
     isTransitive = false
   }
+  */
   compileOnlyApi(libs.checkerQual)
   compileOnlyApi(platform(libs.adventureBom))
   compileOnlyApi(libs.adventureApi)

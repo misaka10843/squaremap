@@ -41,6 +41,7 @@ public final class ConfigManager {
 
     public void reload() {
         Config.reload(this.directoryProvider);
+        MarkerConfig.reload(this.directoryProvider);
         this.worldConfigContainer.reload();
 
         Advanced.reload(this.directoryProvider);
