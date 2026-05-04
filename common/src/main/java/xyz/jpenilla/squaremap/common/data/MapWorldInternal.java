@@ -30,6 +30,8 @@ import xyz.jpenilla.squaremap.common.Logging;
 import xyz.jpenilla.squaremap.common.config.ConfigManager;
 import xyz.jpenilla.squaremap.common.config.WorldAdvanced;
 import xyz.jpenilla.squaremap.common.config.WorldConfig;
+import xyz.jpenilla.squaremap.common.config.MarkerConfig;
+import xyz.jpenilla.squaremap.common.layer.CustomMarkerLayer;
 import xyz.jpenilla.squaremap.common.layer.SpawnIconLayer;
 import xyz.jpenilla.squaremap.common.layer.WorldBorderLayer;
 import xyz.jpenilla.squaremap.common.task.render.RenderFactory;
@@ -82,6 +84,19 @@ public abstract class MapWorldInternal implements MapWorld {
         }
         if (this.config().WORLDBORDER_MARKER_ENABLED) {
             this.layerRegistry().register(WorldBorderLayer.KEY, new WorldBorderLayer(this));
+        }
+
+        // Register custom layers from markers.yml
+        final MarkerConfig markerConfig = MarkerConfig.instance();
+        if (markerConfig != null) {
+            final List<MarkerConfig.LayerConfig> worldLayers = markerConfig.worlds().get(this.identifier().asString());
+            if (worldLayers != null) {
+                for (int i = 0; i < worldLayers.size(); i++) {
+                    final MarkerConfig.LayerConfig layerConfig = worldLayers.get(i);
+                    final Key layerKey = Key.of("squaremap-custom-layer-" + i);
+                    this.layerRegistry().register(layerKey, new CustomMarkerLayer(layerConfig));
+                }
+            }
         }
 
         this.visibilityLimit = new VisibilityLimitImpl(this);
@@ -202,6 +217,20 @@ public abstract class MapWorldInternal implements MapWorld {
         }
         if (this.layerRegistry().hasEntry(WorldBorderLayer.KEY)) {
             this.layerRegistry().unregister(WorldBorderLayer.KEY);
+        }
+        
+        // Unregister custom layers
+        final MarkerConfig markerConfig = MarkerConfig.instance();
+        if (markerConfig != null) {
+            final List<MarkerConfig.LayerConfig> worldLayers = markerConfig.worlds().get(this.identifier().asString());
+            if (worldLayers != null) {
+                for (int i = 0; i < worldLayers.size(); i++) {
+                    final Key layerKey = Key.of("squaremap-custom-layer-" + i);
+                    if (this.layerRegistry().hasEntry(layerKey)) {
+                        this.layerRegistry().unregister(layerKey);
+                    }
+                }
+            }
         }
         this.renderManager.shutdown();
         this.imageIOExecutor.shutdown();

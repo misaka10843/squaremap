@@ -20,9 +20,15 @@ import xyz.jpenilla.squaremap.common.config.ConfigManager;
 import xyz.jpenilla.squaremap.common.config.Messages;
 import xyz.jpenilla.squaremap.common.data.DirectoryProvider;
 import xyz.jpenilla.squaremap.common.data.LevelBiomeColorData;
+import xyz.jpenilla.squaremap.common.config.MarkerConfig;
 import xyz.jpenilla.squaremap.common.httpd.IntegratedServer;
 import xyz.jpenilla.squaremap.common.httpd.JsonCache;
 import xyz.jpenilla.squaremap.common.layer.SpawnIconLayer;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import xyz.jpenilla.squaremap.common.util.Components;
 import xyz.jpenilla.squaremap.common.util.ReflectionUtil;
 import xyz.jpenilla.squaremap.common.util.SquaremapJarAccess;
@@ -100,6 +106,7 @@ public final class SquaremapCommon {
         this.stop();
 
         this.configManager.reload();
+        MarkerConfig.reload(this.directoryProvider);
         this.playerManager.reload();
 
         this.start();
@@ -125,6 +132,41 @@ public final class SquaremapCommon {
             api.iconRegistry().register(SpawnIconLayer.KEY, ImageIO.read(this.directoryProvider.webDirectory().resolve("images/icon/spawn.png").toFile()));
         } catch (final IOException ex) {
             Logging.logger().warn("Failed to register spawn icon", ex);
+        }
+
+        // Register custom icons from markers.yml
+        final MarkerConfig markerConfig = MarkerConfig.instance();
+        if (markerConfig != null) {
+            final Map<String, MarkerConfig.IconConfig> icons = markerConfig.icons();
+            for (final Map.Entry<String, MarkerConfig.IconConfig> entry : icons.entrySet()) {
+                final String name = entry.getKey();
+                final MarkerConfig.IconConfig icon = entry.getValue();
+                final Key key = Key.of(name);
+                if (api.iconRegistry().hasEntry(key)) {
+                    continue;
+                }
+
+                if (icon.url() != null && !icon.url().isEmpty()) {
+                    CompletableFuture.runAsync(() -> {
+                        try {
+                            api.iconRegistry().register(key, ImageIO.read(new URL(icon.url())));
+                        } catch (Exception e) {
+                            Logging.logger().warn("Failed to register icon from URL: {}", icon.url(), e);
+                        }
+                    });
+                } else if (icon.file() != null && !icon.file().isEmpty()) {
+                    final Path path = this.directoryProvider.dataDirectory().resolve(icon.file());
+                    if (Files.exists(path)) {
+                        try {
+                            api.iconRegistry().register(key, ImageIO.read(path.toFile()));
+                        } catch (IOException e) {
+                            Logging.logger().warn("Failed to register icon from file: {}", path, e);
+                        }
+                    } else {
+                        Logging.logger().warn("Icon file not found: {}", path);
+                    }
+                }
+            }
         }
 
         final Method register = ReflectionUtil.needMethod(SquaremapProvider.class, List.of("register"), Squaremap.class);
