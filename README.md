@@ -1,3 +1,69 @@
+## how to use
+
+1. Download the latest artifacts from **GitHub Actions**.
+2. Place the appropriate plugin/mod version into your `mods` or `plugins` folder.
+3. Start the server, then navigate to the `squaremap` configuration directory.
+4. If `markers.yml` does not exist in the folder, create a new one.
+5. Begin adding your markers.
+
+```yaml
+icons:
+    custom_icon:
+        file: icons/my_icon.png
+    remote_icon:
+        url: https://www.chunkbase.com/img/pages/chunk-finders-tn-17.png
+worlds:
+    minecraft:overworld:
+    -   label: 自定义标记层
+        show-controls: true
+        default-hidden: false
+        markers:
+        -   type: icon
+            point:
+            - 100
+            - 200
+            icon: remote_icon
+            size: 16
+            tooltip: 这是一个自定义标记
+            points: []
+            point1: []
+            point2: []
+            style: {}
+        layer-priority: 0
+        z-index: 0
+    -   label: 形状演示层
+        markers:
+        -   type: circle
+            point:
+            - 100
+            - 200
+            radius: 50.0
+            tooltip: 这是一个圆
+            style:
+                stroke-color: '#00FF00'
+                fill-opacity: 0.2
+            points: []
+            point1: []
+            point2: []
+        -   type: rectangle
+            point1:
+            - 0
+            - 0
+            point2:
+            - 50
+            - 50
+            style:
+                fill-color: '#0000FF'
+            point: []
+            points: []
+        show-controls: false
+        default-hidden: false
+        layer-priority: 0
+        z-index: 0
+config-version: 1
+
+```
+
 <div align="center">
 
 # squaremap
